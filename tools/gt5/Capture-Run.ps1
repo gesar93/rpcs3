@@ -30,7 +30,7 @@ $metadata = [ordered]@{
     warning = 'Declared game identity must be checked against RPCS3.log. Process memory alone cannot establish a leak or a graphics hang.'
 }
 if ($EbootPath) { $metadata.ebootSha256 = (Get-FileHash -LiteralPath $EbootPath -Algorithm SHA256).Hash }
-$files = @('config.yml', "config/custom_configs/config_$TitleId.yml", 'GuiConfigs/config_database.dat')
+$files = @('config.yml', 'config/config.yml', "config/custom_configs/config_$TitleId.yml", 'GuiConfigs/config_database.dat')
 foreach ($relative in $files) {
     $source = Join-Path $runtime $relative
     if (Test-Path -LiteralPath $source) {
@@ -45,9 +45,9 @@ try {
         $process.Refresh()
         if ($process.HasExited) { $metadata.stopReason = 'process_exited'; break }
         [pscustomobject]@{
-            utc = [DateTime]::UtcNow.ToString('o'); elapsedSeconds = [math]::Round($timer.Elapsed.TotalSeconds,3)
+            utc = [DateTime]::UtcNow.ToString('o'); elapsedSeconds = [math]::Round($timer.Elapsed.TotalSeconds,3).ToString('0.###',[Globalization.CultureInfo]::InvariantCulture)
             privateBytes = $process.PrivateMemorySize64; workingSetBytes = $process.WorkingSet64
-            cpuSeconds = $process.TotalProcessorTime.TotalSeconds; handles = $process.HandleCount
+            cpuSeconds = $process.TotalProcessorTime.TotalSeconds.ToString('0.#######',[Globalization.CultureInfo]::InvariantCulture); handles = $process.HandleCount
         } | Export-Csv -LiteralPath $csv -NoTypeInformation -Append -Encoding UTF8
         Start-Sleep -Seconds 1
     }
