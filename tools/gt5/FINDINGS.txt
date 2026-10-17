@@ -1,0 +1,48 @@
+Initial evidence review, 2026-10-17
+
+Scope: issue #19822, black screen / high memory usage. No local GT5 run yet.
+https://github.com/RPCS3/rpcs3/issues/19822
+
+Verified from its attached RPCS3.log
+Source: https://github.com/user-attachments/files/33405744/RPCS3.log
+SHA-256: see the separately generated analysis artifact; the parser hashes input.
+Build header: RPCS3 v0.0.43-20288-ce107789 Alpha | master.
+Region: BCUS98114. First metadata reads APP_VER=01.00; a second reads APP_VER=01.13.
+These are not evidence of the 2.01 version asserted by the issue title.
+At 0:25:10 onward Emulation Join Thread waits for rsx::thread; the last retained
+wait at 0:26:17 lasts approximately 67 seconds. No fatal-severity or explicit OOM
+line was found. The log does not contain a host private-memory time series.
+
+Verified in source at 3beb6504de8d81b1d3cb6291cdd35dccea077907
+Utilities/Thread.cpp, thread_base::join(), emits this message while waiting for
+thread completion during emulator shutdown. It is a shutdown symptom, not a
+diagnosis of the earlier black screen or host memory consumption.
+The nominal first-bad revision ce107789 changes Taiko USIO input; the report
+does not establish it as the regressing commit. Treat 20262 as a candidate good
+endpoint only. A maintainer's comment says this can follow a crash and is older.
+
+Hypotheses requiring controlled measurements
+H1: a revision-specific RSX failure (test fresh isolated profiles per revision).
+H2: residual cache/state after a prior crash (compare preserved affected profile
+    with a copy of the same clean baseline on the same revision).
+H3: cache/resource growth unrelated to a persistent allocation leak (measure
+    process private bytes over a fixed repeated scenario and subsequent idle).
+None has been established; absence of an OOM log does not disprove exhaustion.
+
+Other triage context, not additional diagnosis targets
+https://github.com/RPCS3/rpcs3/issues/19840 -- recent freeze/crash, open when read.
+https://github.com/RPCS3/rpcs3/issues/19687 -- texture corruption after transitions,
+open when read; settings workarounds do not eliminate all reported artifacts.
+https://github.com/RPCS3/rpcs3/issues/19480 -- boot regression, CLOSED; fixed #19482.
+https://github.com/RPCS3/rpcs3/issues/18819 -- cache growth issue, CLOSED via #18844.
+https://github.com/RPCS3/rpcs3/issues/10882 -- old desync report, CLOSED via #13917.
+Do not treat those closed reports as confirmed current defects.
+
+Compatibility source
+Official Windows binary release for commit 3beb6504 ships a compatibility database
+which lists BCES00569 and BCUS98114 as Ingame, with report date 2026-05-13.
+The live compatibility/wiki pages returned HTTP 403 to the local client; this is
+an archive snapshot, not a claim to have retrieved the live wiki configuration.
+The bundled config database recommends Accurate RSX reservation access, Mega SPU
+blocks, Sleep Timers Accuracy=As Host, Disable Blit Engine Upscaling.
+Freeze this database snapshot for comparison instead of mixing changing wiki tips.

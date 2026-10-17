@@ -1,0 +1,68 @@
+GT5 diagnostic baseline -- 2026-10-17
+
+Target: https://github.com/RPCS3/rpcs3/issues/19822
+Question: Does a repeatable black-screen / growing-memory failure depend on the
+RPCS3 revision, or on the state left by a previous crash?
+
+STATUS: protocol prepared; game reproduction NOT RUN. No emulator fix claimed.
+The issue title says XL 2.01; its attached log reports BCUS98114 and a second
+boot with APP_VER=01.13. Resolve this discrepancy before comparing results.
+A user test on BCES00569 is useful but is a different region/version experiment.
+
+Prerequisites
+1. Valid decrypted game dump, firmware from PlayStation, and exact game update
+   identified in RPCS3.log. Do not mix modified game data into the baseline.
+2. Separate runtime directories for good candidate, reported bad, current, patch.
+   Never share a writable dev_hdd0, dev_hdd1, cache or save between live instances.
+3. Back up saves, then copy the same starting save and installed game data to each
+   isolated runtime. Disable the updater for these test copies in GUI settings.
+4. Create a custom config from the same config-database snapshot in every build;
+   use Vulkan, RTX GPU, 1280x720, 100% scale, no FPS patches or optional overrides.
+   Record generated config hashes; older builds may interpret settings differently.
+
+Revisions
+good-candidate: 8f2fe1a99caef5d6e1eb9e4579f1d6169cf4b771 (20262), reported good only
+reported-bad: ce107789 (20288), do not presume this commit introduced the fault
+current: 3beb6504de8d81b1d3cb6291cdd35dccea077907 (20327)
+The issue asks about 20266. Do not bisect until both endpoints reproduce reliably.
+
+Controlled scenarios (same car, track, camera, weather, opponents, actions)
+S0: firmware/UI startup only; this does not test GT5 compatibility.
+S1: Arcade time trial, dry fixed track, one car, 15 minutes plus normal exit.
+S2: same circuit and car, fixed AI grid, three 15-minute sessions per revision.
+S3: fixed sequence of 20 track/menu transitions, then normal exit and restart.
+S4: only after a naturally observed crash, preserve that runtime as evidence;
+    compare its next launch with a copied clean baseline. Never manufacture a
+    crash in a user's only save. A change across S4 is correlation, not causation.
+Freeze precise scenario details in run notes before the first measured comparison.
+Separate cold caches and warm caches into different groups; do not delete evidence.
+
+Run collection (PowerShell, from repository root; replace placeholders)
+.\tools\gt5\Capture-Run.ps1 -ProcessId <rpcs3 PID> -RuntimeDirectory <runtime> -OutputDirectory <new run folder> -Scenario 'S1 exact car/track/camera' -TitleId BCES00569 -GameVersion <actual> -CacheState cold -DurationSeconds 900
+python tools/gt5/analyze_log.py <copied log path> --output <run folder>/log-evidence.json
+Current Windows builds use log/RPCS3.log; the collector also supports older root
+log locations and saves the first path as log_RPCS3.log to avoid name collisions.
+Use -EbootPath <actual game EBOOT.BIN> to record its SHA-256 where available.
+
+Also record time of first controllable frame, visible/audio/input freeze time,
+race result, transitions completed, manual termination, and crash-dialog text.
+The collector measures process private memory, working set, CPU and handles.
+It does NOT measure FPS, GPU memory or detect black screens. Record those manually
+or attach a short capture with an on-screen performance overlay.
+If sampling expires with the process still running, the log is only a partial
+snapshot. After normal exit copy final logs before launching RPCS3 again.
+
+Failure criteria
+Black-screen / frozen race with evidence of loss of progress, process crash, or
+failure to exit normally. Memory growth alone is NOT a failure or proof of a leak.
+Pass means completion of THIS scenario. Three passes do not establish stability.
+If the exact GT5 XL report cannot be reproduced, diagnose the user's first
+reproducible failure instead and give it a separate case ID.
+
+Progression
+A. Build unmodified pinned upstream and establish same behavior as official binary.
+B. Reproduce one fault with clean/dirty-cache state, logs and memory timeline.
+C. Narrow commit range or capture RSX/threads; add diagnostics before changing logic.
+D. Apply one justified fix, rerun failing scenario and adjacent smoke scenarios.
+E. Extend to championships, save/load, wet/night races, 60-120-minute sessions.
+Do not promise universal 60 FPS or full-game completion from a short race.
