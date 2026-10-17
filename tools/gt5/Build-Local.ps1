@@ -27,6 +27,17 @@ try {
     $env:CMAKE_BUILD_PARALLEL_LEVEL = '2'
     Push-Location $repo
     try {
+        $toolDirectory = & $MSBuildPath 'rpcs3/rpcs3.vcxproj' "/p:SolutionDir=$repo\" '/p:Configuration=Release' '/p:Platform=x64' "/p:PlatformToolset=$PlatformToolset" '/getProperty:VCToolsInstallDir' '/nologo'
+        if ($LASTEXITCODE -ne 0) { throw 'Could not resolve the selected MSVC tool directory' }
+        $toolDirectory = ($toolDirectory | Select-Object -Last 1).Trim()
+        $dumpbin = Join-Path $toolDirectory 'bin/Hostx64/x64/dumpbin.exe'
+        $stlLibrary = Join-Path $toolDirectory 'lib/x64/libcpmt.lib'
+        if (-not (Test-Path -LiteralPath $dumpbin) -or -not (Test-Path -LiteralPath $stlLibrary)) { throw 'Selected MSVC tools or static C++ runtime were not found' }
+        $symbols = (& $dumpbin '/linkermember:1' $stlLibrary) -join "`n"
+        if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the selected C++ runtime' }
+        foreach ($symbol in @('__std_max_element_1u','__std_max_element_8u','__std_min_element_4u','__std_minmax_element_8u')) {
+            if (-not $symbols.Contains($symbol)) { throw "The selected MSVC static runtime lacks $symbol required by prebuilt LLVM 22.1.8. Update the stable Visual Studio 2026 C++ Build Tools before rebuilding." }
+        }
         & $MSBuildPath 'rpcs3.sln' '/t:rpcs3' '/p:Configuration=Release' '/p:Platform=x64' "/p:PlatformToolset=$PlatformToolset" '/p:PreferredToolArchitecture=x64' '/p:CL_MPCount=2' "/m:$ParallelProjects" '/v:minimal' '/nologo'
         if ($LASTEXITCODE -ne 0) { throw "RPCS3 build failed with exit code $LASTEXITCODE" }
     } finally { Pop-Location }

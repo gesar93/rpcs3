@@ -46,3 +46,19 @@ an archive snapshot, not a claim to have retrieved the live wiki configuration.
 The bundled config database recommends Accurate RSX reservation access, Mega SPU
 blocks, Sleep Timers Accuracy=As Host, Disable Blit Engine Upscaling.
 Freeze this database snapshot for comparison instead of mixing changing wiki tips.
+
+Local build prerequisite found
+Compilation completed, but final linking with the official LLVM 22.1.8 prebuilt
+libraries failed: installed MSVC 14.50.35717 lacks __std_max_element_1u,
+__std_max_element_8u, __std_min_element_4u, __std_minmax_element_8u in libcpmt.lib.
+No working locally built RPCS3 executable has been confirmed. Update the stable
+VS2026 C++ Build Tools, then rerun Build-Local.ps1. The script now checks these
+symbols before compiling. The check was exercised and correctly rejected the
+installed runtime. Do not add substitute implementations of these STL functions.
+Microsoft's compatibility requirement: use a linker at least as recent as the
+newest input library's toolset:
+https://learn.microsoft.com/en-us/cpp/porting/binary-compat-2015-2017
+
+Local game files became available during setup. Disc PARAM.SFO reports BCES00569,
+APP_VER=01.00, VERSION=04.00; this is disc metadata, not proof of the effective
+installed game update. The game has not been booted or reproduced locally.
