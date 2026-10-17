@@ -28,13 +28,21 @@ The issue asks about 20266. Do not bisect until both endpoints reproduce reliabl
 
 Controlled scenarios (same car, track, camera, weather, opponents, actions)
 S0: firmware/UI startup only; this does not test GT5 compatibility.
-S1: Arcade time trial, dry fixed track, one car, 15 minutes plus normal exit.
-S2: same circuit and car, fixed AI grid, three 15-minute sessions per revision.
-S3: fixed sequence of 20 track/menu transitions, then normal exit and restart.
+S1: Arcade > Time Trial, Nissan GT-R '07, High Speed Ring (normal direction),
+    dry daytime, Sports Hard tyres, bumper camera, stock assists/settings.
+    Start the clock at the first controllable frame, drive continuous laps for
+    15 minutes, return to the menu, then exit normally. Record every pause/lap.
+S2: same car/track/camera, Arcade Single Race, Professional, three 15-minute
+    sessions per revision (restart the same event as needed). Photograph the
+    grid and record actual opponent count; randomized grids are a confounder.
+S3: the S1 event, enter the track, wait 30 seconds after control becomes available,
+    return to the selection menu; repeat 20 times, then normal exit and restart.
 S4: only after a naturally observed crash, preserve that runtime as evidence;
     compare its next launch with a copied clean baseline. Never manufacture a
     crash in a user's only save. A change across S4 is correlation, not causation.
-Freeze precise scenario details in run notes before the first measured comparison.
+If a specified car/option is unavailable, stop and define one replacement in the
+case notes before comparison; never silently substitute between revisions.
+Freeze all remaining scenario details in run notes before the first comparison.
 Separate cold caches and warm caches into different groups; do not delete evidence.
 
 Run collection (PowerShell, from repository root; replace placeholders)
